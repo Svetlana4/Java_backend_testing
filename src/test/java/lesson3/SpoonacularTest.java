@@ -13,10 +13,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
-public class SpoonacularTest extends AbstractTest{
+public class SpoonacularTest extends AbstractTest {
 
     @BeforeAll
-    static void setUp(){
+    static void setUp() {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
@@ -36,7 +36,7 @@ public class SpoonacularTest extends AbstractTest{
                 .body("results[0].title", equalTo("Falafel Burger"))
                 .body("results[0]", not(hasKey("missedIngredients")))
                 .when()
-                .get(getBaseUrl()+"recipes/complexSearch")
+                .get(getBaseUrl() + "recipes/complexSearch")
                 .then()
                 .statusCode(200);
     }
@@ -149,7 +149,7 @@ public class SpoonacularTest extends AbstractTest{
         given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("language", "en")
-                .formParam("title","Mango Fried Rice")
+                .formParam("title", "Mango Fried Rice")
                 .contentType("application/x-www-form-urlencoded")
                 .when()
                 .post("https://api.spoonacular.com/recipes/cuisine")
@@ -169,8 +169,8 @@ public class SpoonacularTest extends AbstractTest{
         given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("language", "en")
-                .formParam("title","Mango Fried Rice")
-                .formParam("ingredientList","cauliflower\n" +
+                .formParam("title", "Mango Fried Rice")
+                .formParam("ingredientList", "cauliflower\n" +
                         "rice\n" + "couscous")
                 .contentType("application/x-www-form-urlencoded")
                 .when()
@@ -190,7 +190,7 @@ public class SpoonacularTest extends AbstractTest{
         given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("language", "en")
-                .formParam("ingredientList","cauliflower\n" +
+                .formParam("ingredientList", "cauliflower\n" +
                         "rice\n" + "couscous")
                 .contentType("application/x-www-form-urlencoded")
                 .when()
@@ -210,7 +210,7 @@ public class SpoonacularTest extends AbstractTest{
         given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("language", "de")
-                .formParam("title","Mango gebratener Reis")
+                .formParam("title", "Mango gebratener Reis")
                 .contentType("application/x-www-form-urlencoded")
                 .when()
                 .post("https://api.spoonacular.com/recipes/cuisine")
@@ -229,7 +229,7 @@ public class SpoonacularTest extends AbstractTest{
         given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("language", "ru")
-                .formParam("title","Mango Fried Rice")
+                .formParam("title", "Mango Fried Rice")
                 .contentType("application/x-www-form-urlencoded")
                 .when()
                 .post("https://api.spoonacular.com/recipes/cuisine")
@@ -256,8 +256,8 @@ public class SpoonacularTest extends AbstractTest{
                 .statusCode(200)
                 .extract()
                 .jsonPath();
-var name = response.getString("username");
-var hash = response.getString("hash");
+        var name = response.getString("username");
+        var hash = response.getString("hash");
 
         System.out.println(name);
         System.out.println(hash);
@@ -265,9 +265,9 @@ var hash = response.getString("hash");
         given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("hash", hash)
-                .pathParam("username",name)
-                .pathParam("start-date","01.09.2022")
-                .pathParam("end-date","07.09.2022")
+                .pathParam("username", name)
+                .pathParam("start-date", "01.09.2022")
+                .pathParam("end-date", "07.09.2022")
                 .when()
                 .post(getBaseUrl() + "mealplanner/{username}/shopping-list/{start-date}/{end-date}")
                 .then()
@@ -277,7 +277,7 @@ var hash = response.getString("hash");
         var id = given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("hash", hash)
-                .pathParam("username",name)
+                .pathParam("username", name)
                 .body("{\n" +
                         "\t\"item\": \"1 package baking powder\",\n" +
                         "\t\"aisle\": \"Baking\",\n" +
@@ -293,36 +293,35 @@ var hash = response.getString("hash");
 //                .prettyPeek()
                 .getInt("id");
 
-       given()
+        given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("hash", hash)
-                .pathParam("username",name)
+                .pathParam("username", name)
                 .when()
                 .get(getBaseUrl() + "mealplanner/{username}/shopping-list")
                 .then()
 //                .header("Content-Type", "application/json")
-               .contentType(ContentType.JSON)
-                .body("aisles[0].items[0].id",equalTo(id))
-               .body("aisles[0].items[0].name",equalTo("baking powder"))
-               .body("aisles[0].items[0].measures.original.amount",equalTo(1.0F))
-               .body("aisles[0].items[0].measures.original.unit",equalTo("package"))
+                .contentType(ContentType.JSON)
+                .body("aisles[0].items[0].id", equalTo(id))
+                .body("aisles[0].items[0].name", equalTo("baking powder"))
+                .body("aisles[0].items[0].measures.original.amount", equalTo(1.0F))
+                .body("aisles[0].items[0].measures.original.unit", equalTo("package"))
                 .statusCode(200);
 
         given()
                 .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
                 .queryParam("hash", hash)
-                .pathParam("username",name)
-                .pathParam("id",id)
+                .pathParam("username", name)
+                .pathParam("id", id)
                 .when()
                 .delete(getBaseUrl() + "mealplanner/{username}/shopping-list/items/{id}")
                 .then()
                 .contentType(ContentType.JSON)
                 .statusCode(200)
-                .body("status",equalTo("success"))
+                .body("status", equalTo("success"))
                 .extract().jsonPath().prettyPeek();
 
     }
-
 
 
 }
