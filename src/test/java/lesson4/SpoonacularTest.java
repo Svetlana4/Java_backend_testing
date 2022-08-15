@@ -1,8 +1,10 @@
-package lesson3;
+package lesson4;
 
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -25,12 +27,11 @@ public class SpoonacularTest extends AbstractTest {
         System.out.println(getBaseUrl());
 
         given()
-                .queryParam("apiKey", getApiKey())
+                .spec(requestSpecification)
                 .queryParam("query", "burger")
                 .queryParam("number", "1")
                 .queryParam("fillIngredients", "false")
                 .response()
-                .contentType(ContentType.JSON)
                 .header("Content-Type", "application/json")
                 .expect()
                 .body("results[0].title", equalTo("Falafel Burger"))
@@ -38,22 +39,21 @@ public class SpoonacularTest extends AbstractTest {
                 .when()
                 .get(getBaseUrl() + "recipes/complexSearch")
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     @Test
     void getSearchRecipesWithAddedInformationAboutIngredients() {
         JsonPath response = given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
+                .spec(requestSpecification)
                 .queryParam("query", "burger")
                 .queryParam("number", "1")
                 .queryParam("fillIngredients", "true")
                 .when()
                 .get("https://api.spoonacular.com/recipes/complexSearch")
                 .then()
-                .contentType(ContentType.JSON)
                 .header("Content-Type", "application/json")
-                .statusCode(200)
+                .spec(responseSpecification)
                 .body("results[0]", hasKey("missedIngredients"))
                 .extract()
                 .jsonPath();
@@ -72,13 +72,12 @@ public class SpoonacularTest extends AbstractTest {
     @Test
     void getSearchRecipesByZincAmount() {
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
+                .spec(requestSpecification)
                 .queryParam("query", "pasta")
                 .queryParam("number", "1")
                 .queryParam("minZinc", 10)
                 .queryParam("maxZinc", 100)
                 .response()
-                .contentType(ContentType.JSON)
                 .header("Content-Type", "application/json")
                 .expect()
                 .body("results[0].title", equalTo("Extra Large Homemade Meatballs w Pasta"))
@@ -91,13 +90,13 @@ public class SpoonacularTest extends AbstractTest {
                 .get("https://api.spoonacular.com/recipes/complexSearch")
 //                .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     @Test
     void getSearchRecipesSortDirectionAscending() {
         JsonPath response = given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
+                .spec(requestSpecification)
                 .queryParam("query", "burger")
                 .queryParam("number", "3")
                 .queryParam("sort", "calories")
@@ -105,9 +104,8 @@ public class SpoonacularTest extends AbstractTest {
                 .when()
                 .get("https://api.spoonacular.com/recipes/complexSearch")
                 .then()
-                .contentType(ContentType.JSON)
                 .header("Content-Type", "application/json")
-                .statusCode(200)
+                .spec(responseSpecification)
                 .extract()
                 .jsonPath();
 
@@ -128,12 +126,11 @@ public class SpoonacularTest extends AbstractTest {
     @Test
     void getSearchRecipesByCuisine() {
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
+                .spec(requestSpecification)
                 .queryParam("number", "1")
                 .queryParam("cuisine", "Chinese")
                 .queryParam("addRecipeInformation", true)
                 .response()
-                .contentType(ContentType.JSON)
                 .header("Content-Type", "application/json")
                 .expect()
                 .body("results[0]", hasKey("cuisines"))
@@ -141,38 +138,40 @@ public class SpoonacularTest extends AbstractTest {
                 .when()
                 .get("https://api.spoonacular.com/recipes/complexSearch")
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification);
     }
+
+    RequestSpecification enSpecification = new RequestSpecBuilder()
+            .addRequestSpecification(requestSpecification)
+            .addQueryParam("language", "en")
+            .setContentType("application/x-www-form-urlencoded")
+            .build();
 
     @Test
     void postClassifyCuisineByTitle() {
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .queryParam("language", "en")
+                .spec(enSpecification)
                 .formParam("title", "Mango Fried Rice")
-                .contentType("application/x-www-form-urlencoded")
                 .when()
                 .post("https://api.spoonacular.com/recipes/cuisine")
                 .then()
                 .header("Content-Type", "application/json")
-//                .expect()
                 .body("cuisine", equalTo("Chinese"))
                 .body("cuisines[0]", equalTo("Chinese"))
                 .body("cuisines[1]", equalTo("Asian"))
                 .body("confidence", greaterThanOrEqualTo(0.1F))
                 .body("confidence", equalTo(0.85F))
-                .statusCode(200);
+                .spec(responseSpecification);
     }
+
 
     @Test
     void postCClassifyCuisineByIngredientsAndTitle() {
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .queryParam("language", "en")
+                .spec(enSpecification)
                 .formParam("title", "Mango Fried Rice")
                 .formParam("ingredientList", "cauliflower\n" +
                         "rice\n" + "couscous")
-                .contentType("application/x-www-form-urlencoded")
                 .when()
                 .post("https://api.spoonacular.com/recipes/cuisine")
                 .then()
@@ -182,17 +181,15 @@ public class SpoonacularTest extends AbstractTest {
                 .body("cuisines[1]", equalTo("Asian"))
                 .body("confidence", greaterThanOrEqualTo(0.1F))
                 .body("confidence", equalTo(0.85F))
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     @Test
     void postClassifyCuisineByIngredientsWithoutTitle() {
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .queryParam("language", "en")
+                .spec(enSpecification)
                 .formParam("ingredientList", "cauliflower\n" +
                         "rice\n" + "couscous")
-                .contentType("application/x-www-form-urlencoded")
                 .when()
                 .post("https://api.spoonacular.com/recipes/cuisine")
                 .then()
@@ -202,13 +199,13 @@ public class SpoonacularTest extends AbstractTest {
                 .body("cuisines[1]", equalTo("European"))
                 .body("cuisines[2]", equalTo("Italian"))
                 .body("confidence", equalTo(0F))
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     @Test
     void postClassifyCuisineByTitleInDE() {
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
+                .spec(requestSpecification)
                 .queryParam("language", "de")
                 .formParam("title", "Mango gebratener Reis")
                 .contentType("application/x-www-form-urlencoded")
@@ -221,13 +218,13 @@ public class SpoonacularTest extends AbstractTest {
                 .body("cuisines[1]", equalTo("European"))
                 .body("cuisines[2]", equalTo("Italian"))
                 .body("confidence", equalTo(0F))
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     @Test
     void postСheckIfLanguageValueIsRU() {
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
+                .spec(requestSpecification)
                 .queryParam("language", "ru")
                 .formParam("title", "Mango Fried Rice")
                 .contentType("application/x-www-form-urlencoded")
@@ -238,90 +235,75 @@ public class SpoonacularTest extends AbstractTest {
                 .statusCode(500);
     }
 
-
     @Test
     void addMealPlanTest() {
-        JsonPath response = given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .body("{\n" +
-                        "    \"username\": \"your user's name\",\n" +
-                        "    \"firstName\": \"your user's first name\",\n" +
-                        "    \"lastName\": \"your user's last name\",\n" +
-                        "    \"email\": \"your user's email\"\n" +
-                        "}")
+        CreateUserResponse response = given()
+                .spec(requestSpecification)
+                .body(new CreateUserRequest(
+                        "your user's name", "your user's first name", "your user's last name", "your user's email"
+                ))
                 .when()
                 .post(getBaseUrl() + "users/connect")
                 .then()
-                .header("Content-Type", "application/json")
-                .statusCode(200)
+                .spec(responseSpecification)
                 .extract()
-                .jsonPath();
-        var name = response.getString("username");
-        var hash = response.getString("hash");
+                .as(CreateUserResponse.class);
+        var name = response.getName();
+        var hash = response.getHash();
 
         System.out.println(name);
         System.out.println(hash);
 
+        RequestSpecification hashSpecification = new RequestSpecBuilder()
+                .addRequestSpecification(requestSpecification)
+                .addQueryParam("hash", hash)
+                .addPathParam("username", name)
+                .build();
+
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .queryParam("hash", hash)
-                .pathParam("username", name)
+                .spec(hashSpecification)
                 .pathParam("start-date", "01.09.2022")
                 .pathParam("end-date", "07.09.2022")
                 .when()
                 .post(getBaseUrl() + "mealplanner/{username}/shopping-list/{start-date}/{end-date}")
                 .then()
-                .header("Content-Type", "application/json")
-                .statusCode(200);
+                .spec(responseSpecification);
 
         var id = given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .queryParam("hash", hash)
-                .pathParam("username", name)
-                .body("{\n" +
-                        "\t\"item\": \"1 package baking powder\",\n" +
-                        "\t\"aisle\": \"Baking\",\n" +
-                        "\t\"parse\": true\n" +
-                        "}")
+                .spec(requestSpecification)
+                .spec(hashSpecification)
+                .body(new AddItemRequest("1 package baking powder", "Baking", "true"))
                 .when()
                 .post(getBaseUrl() + "mealplanner/{username}/shopping-list/items")
                 .then()
-                .header("Content-Type", "application/json")
-                .statusCode(200)
+                .spec(responseSpecification)
                 .extract()
-                .jsonPath()
-//                .prettyPeek()
-                .getInt("id");
+                .as(CreateItemResponse.class)
+                .getId();
+        System.out.println(id);
 
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .queryParam("hash", hash)
-                .pathParam("username", name)
+                .spec(requestSpecification)
+                .spec(hashSpecification)
                 .when()
                 .get(getBaseUrl() + "mealplanner/{username}/shopping-list")
                 .then()
-//                .header("Content-Type", "application/json")
-                .contentType(ContentType.JSON)
                 .body("aisles[0].items[0].id", equalTo(id))
                 .body("aisles[0].items[0].name", equalTo("baking powder"))
                 .body("aisles[0].items[0].measures.original.amount", equalTo(1.0F))
                 .body("aisles[0].items[0].measures.original.unit", equalTo("package"))
-                .statusCode(200);
+                .spec(responseSpecification);
 
         given()
-                .queryParam("apiKey", "4fd5337dc2894f22881490576092b2d4")
-                .queryParam("hash", hash)
-                .pathParam("username", name)
+                .spec(requestSpecification)
+                .spec(hashSpecification)
                 .pathParam("id", id)
                 .when()
                 .delete(getBaseUrl() + "mealplanner/{username}/shopping-list/items/{id}")
                 .then()
-                .contentType(ContentType.JSON)
-                .statusCode(200)
+                .spec(responseSpecification)
                 .body("status", equalTo("success"))
                 .extract().jsonPath().prettyPeek();
-
     }
-
 
 }
