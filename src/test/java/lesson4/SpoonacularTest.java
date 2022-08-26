@@ -142,11 +142,7 @@ public class SpoonacularTest extends AbstractTest {
                 .spec(responseSpecification);
     }
 
-    RequestSpecification enSpecification = new RequestSpecBuilder()
-            .addRequestSpecification(requestSpecification)
-            .addQueryParam("language", "en")
-            .setContentType("application/x-www-form-urlencoded")
-            .build();
+
 
     @Test
     void postClassifyCuisineByTitle() {

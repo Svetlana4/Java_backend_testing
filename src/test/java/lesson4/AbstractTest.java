@@ -25,7 +25,7 @@ public abstract class AbstractTest {
 
     protected static RequestSpecification requestSpecification;
     protected static ResponseSpecification responseSpecification;
-
+    protected  static RequestSpecification enSpecification;
     @BeforeAll
     static void initTest() throws IOException {
 //        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -36,6 +36,7 @@ public abstract class AbstractTest {
         baseUrl= prop.getProperty("base_url");
 
 
+        System.out.println("Building request specification");
         requestSpecification = new RequestSpecBuilder()
                 .addQueryParam("apiKey", apiKey)
                 .build();
@@ -43,6 +44,12 @@ public abstract class AbstractTest {
         responseSpecification = new ResponseSpecBuilder()
                 .expectContentType(ContentType.JSON)
                 .expectStatusCode(200)
+                .build();
+
+        enSpecification = new RequestSpecBuilder()
+                .addRequestSpecification(requestSpecification)
+                .addQueryParam("language", "en")
+                .setContentType("application/x-www-form-urlencoded")
                 .build();
     }
 
